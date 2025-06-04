@@ -1,0 +1,834 @@
+<html lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   guudz-start - Payment
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+      font-family: "Poppins", sans-serif;
+      background: #0f172a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .loader {
+      width: 80px;
+      height: 80px;
+      border: 8px solid #1e293b;
+      border-top: 8px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    /* Avatar floating animation */
+    @keyframes floaty {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+    .avatar-float {
+      animation: floaty 4s ease-in-out infinite;
+      transition: box-shadow 0.3s ease;
+      cursor: pointer;
+      border-radius: 9999px;
+      border: 3px solid #3b82f6;
+      box-shadow: 0 0 15px #3b82f6aa;
+    }
+    .avatar-float:active {
+      box-shadow: 0 0 30px #60a5fa;
+      transform: translateY(-10px) scale(1.05);
+    }
+    /* Card flip */
+    .flip-card {
+      perspective: 1000px;
+      cursor: pointer;
+      width: 280px;
+      height: 160px;
+      margin: auto;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      box-shadow: 0 4px 15px rgb(59 130 246 / 0.5);
+      border-radius: 1rem;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg) translateZ(30px);
+      box-shadow: 0 8px 30px rgb(96 165 250 / 0.8);
+      z-index: 10;
+      position: relative;
+    }
+    .flip-card-front,
+    .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 1rem;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      user-select: none;
+    }
+    .flip-card-front {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+    .flip-card-front img {
+      width: 60px;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 0 3px #60a5fa);
+    }
+    .flip-card-back {
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      transform: rotateY(180deg);
+      font-family: monospace;
+      font-size: 1.25rem;
+      letter-spacing: 0.1em;
+      position: relative;
+    }
+    .copy-btn {
+      margin-top: 1rem;
+      background: #60a5fa;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 0.5rem 1.5rem;
+      border-radius: 9999px;
+      box-shadow: 0 4px 10px #3b82f6aa;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .copy-btn:hover {
+      background: #3b82f6;
+      color: white;
+    }
+    /* QRIS container */
+    .qris-container {
+      max-width: 320px;
+      margin: auto;
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 4px 20px #2563ebaa;
+      text-align: center;
+    }
+    .qris-container img {
+      width: 100%;
+      border-radius: 1rem;
+      box-shadow: 0 0 15px #3b82f6aa;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .qris-container img:hover {
+      transform: scale(1.05);
+    }
+    .qris-buttons {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .qris-btn {
+      background: #3b82f6;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
+      box-shadow: 0 4px 10px #60a5faaa;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    .qris-btn:hover {
+      background: #2563eb;
+      color: white;
+    }
+    /* Quotes */
+    .quotes {
+      max-width: 700px;
+      margin: 3rem auto 2rem;
+      text-align: center;
+      font-style: italic;
+      font-weight: 500;
+      color: #93c5fd;
+      user-select: none;
+    }
+    .quotes p {
+      margin-bottom: 1rem;
+      font-size: 1.15rem;
+    }
+    /* Footer note */
+    .footer-note {
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      text-align: center;
+      font-weight: 600;
+      color: #60a5fa;
+      font-size: 1.1rem;
+      user-select: none;
+    }
+    /* Header */
+    header {
+      background: #1e293b;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px #2563ebaa;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    header h1 {
+      font-weight: 900;
+      font-size: 1.75rem;
+      color: #3b82f6;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
+    header h1:active {
+      color: #60a5fa;
+    }
+    header .profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #e0e0e0;
+      font-weight: 600;
+      user-select: none;
+    }
+    header .profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      border: 2px solid #3b82f6;
+      animation: floaty 4s ease-in-out infinite;
+    }
+    /* Avatar enlarge modal */
+    #avatarModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 60;
+      padding: 1rem;
+    }
+    #avatarModal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 1rem;
+      box-shadow: 0 0 30px #3b82f6aa;
+      user-select: none;
+    }
+    #avatarModal .close-btn {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: #3b82f6;
+      color: #0f172a;
+      font-weight: 700;
+      border-radius: 9999px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      box-shadow: 0 0 15px #60a5faaa;
+      user-select: none;
+      transition: background-color 0.3s ease;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+    #avatarModal .close-btn:hover {
+      background: #2563eb;
+      color: white;
+    }
+    /* Services section */
+    .services {
+      max-width: 900px;
+      margin: 3rem auto 4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+      gap: 1.5rem;
+      user-select: none;
+    }
+    .service-card {
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px #2563ebaa;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      color: #93c5fd;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      border: 2px solid transparent;
+    }
+    .service-card i {
+      font-size: 2.5rem;
+      transition: color 0.3s ease;
+    }
+    .service-card:hover {
+      background: #3b82f6;
+      color: #0f172a;
+      border-color: #60a5fa;
+    }
+    .service-card:hover i {
+      color: #0f172a;
+    }
+    /* Music player */
+    .music-player {
+      max-width: 700px;
+      margin: 0 auto 4rem;
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 20px #2563ebaa;
+      user-select: none;
+    }
+    .music-player h2 {
+      color: #3b82f6;
+      font-weight: 900;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .track {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #2563eb;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 4px 10px #60a5faaa;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .track:last-child {
+      margin-bottom: 0;
+    }
+    .track:hover {
+      background: #3b82f6;
+      color: white;
+    }
+    .track i {
+      font-size: 1.25rem;
+      user-select: none;
+    }
+    /* Clock */
+    #clock {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #60a5fa;
+      user-select: none;
+      font-family: monospace;
+      letter-spacing: 0.1em;
+    }
+    /* Responsive tweaks */
+    @media (max-width: 640px) {
+      .flip-card {
+        width: 90vw;
+        height: 160px;
+      }
+      .qris-container {
+        max-width: 90vw;
+      }
+      .services {
+        grid-template-columns: 1fr;
+      }
+      header h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+ </head>
+ <body>
+  <!-- Loading overlay -->
+  <div aria-label="Loading screen" id="loadingOverlay">
+   <div aria-label="Loading spinner" class="loader" role="img">
+   </div>
+   <p class="text-blue-400 font-semibold text-lg">
+    Sedang memuat, sabar ya cuy...
+   </p>
+  </div>
+  <header>
+   <h1 aria-label="Hubungi Alpin Developer via WhatsApp" id="developerName" role="link" tabindex="0">
+    guudz-start();
+   </h1>
+   <div aria-label="Profil guudz-start" class="profile">
+    <img alt="Avatar guudz-start, seorang santri ASSALAM yang mencintai coding, mengenakan baju hijau dan latar belakang biru gelap" class="avatar-float" src="https://img1.pixhost.to/images/6218/607026446_skyzopedia.jpg" tabindex="0"/>
+    <div>
+     <div>
+      guudz-start
+     </div>
+     <div aria-atomic="true" aria-label="Jam saat ini" aria-live="polite" id="clock">
+     </div>
+    </div>
+   </div>
+  </header>
+  <main class="px-4 sm:px-8 max-w-7xl mx-auto">
+   <!-- Avatar enlarge button -->
+   <div class="flex justify-center mt-6">
+    <button aria-label="Perbesar foto avatar guudz-start" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-full shadow-lg transition-colors flex items-center gap-2" id="btnEnlargeAvatar">
+     <i class="fas fa-search-plus">
+     </i>
+     Perbesar Avatar
+    </button>
+   </div>
+   <!-- Payment Cards -->
+   <section aria-label="Daftar metode pembayaran" class="mt-10 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Dana Card -->
+    <div aria-label="Kartu pembayaran Dana, klik untuk lihat nomor dan salin" aria-pressed="false" class="flip-card" role="button" tabindex="0">
+     <div class="flip-card-inner">
+      <div aria-hidden="false" class="flip-card-front">
+       <img alt="Logo Dana berwarna biru dengan tulisan Dana" draggable="false" height="60" loading="lazy" src="https://storage.googleapis.com/a1aa/image/1cb1589c-33ca-4b7b-927a-170b9b891757.jpg" width="60"/>
+       Dana
+       <div class="mt-4 text-sm opacity-70">
+        Klik untuk lihat nomor
+       </div>
+      </div>
+      <div aria-hidden="true" class="flip-card-back">
+       <div>
+        0882003862744
+       </div>
+       <button aria-label="Salin nomor Dana" class="copy-btn">
+        Salin
+       </button>
+      </div>
+     </div>
+    </div>
+    <!-- OVO Card -->
+    <div aria-label="Kartu pembayaran OVO, klik untuk lihat nomor dan salin" aria-pressed="false" class="flip-card" role="button" tabindex="0">
+     <div class="flip-card-inner">
+      <div aria-hidden="false" class="flip-card-front">
+       <img alt="Logo OVO berwarna ungu dengan tulisan OVO" draggable="false" height="60" loading="lazy" src="https://storage.googleapis.com/a1aa/image/1fbb4668-697d-4b3c-f43f-ad4f7a9d196a.jpg" width="60"/>
+       OVO
+       <div class="mt-4 text-sm opacity-70">
+        Klik untuk lihat nomor
+       </div>
+      </div>
+      <div aria-hidden="true" class="flip-card-back">
+       <div>
+        0882003862744
+       </div>
+       <button aria-label="Salin nomor OVO" class="copy-btn">
+        Salin
+       </button>
+      </div>
+     </div>
+    </div>
+    <!-- GoPay Card -->
+    <div aria-label="Kartu pembayaran GoPay, klik untuk lihat nomor dan salin" aria-pressed="false" class="flip-card" role="button" tabindex="0">
+     <div class="flip-card-inner">
+      <div aria-hidden="false" class="flip-card-front">
+       <img alt="Logo GoPay berwarna hijau dengan tulisan GoPay" draggable="false" height="60" loading="lazy" src="https://storage.googleapis.com/a1aa/image/3a1c84af-84df-4c6c-47be-cf5d10f35bd9.jpg" width="60"/>
+       GoPay
+       <div class="mt-4 text-sm opacity-70">
+        Klik untuk lihat nomor
+       </div>
+      </div>
+      <div aria-hidden="true" class="flip-card-back">
+       <div>
+        0882003862744
+       </div>
+       <button aria-label="Salin nomor GoPay" class="copy-btn">
+        Salin
+       </button>
+      </div>
+     </div>
+    </div>
+   </section>
+   <!-- QRIS Section -->
+   <section aria-label="Pembayaran QRIS" class="mt-14 max-w-md mx-auto">
+    <h2 class="text-center text-2xl font-extrabold text-blue-400 mb-6 select-none">
+     Scan QRIS Dana
+    </h2>
+    <div aria-label="Kode QRIS Dana" class="qris-container" role="region">
+     <img alt="Kode QRIS Dana berwarna biru dengan latar belakang putih, siap discan untuk pembayaran" id="qrisImage" loading="lazy" src="https://files.catbox.moe/o1bsot.jpg" tabindex="0"/>
+     <div class="qris-buttons mt-4 justify-center">
+      <button aria-label="Download gambar QRIS Dana" class="qris-btn" id="btnDownloadQR">
+       <i class="fas fa-download">
+       </i>
+       Download QR
+      </button>
+      <button aria-label="Perbesar gambar QRIS Dana" class="qris-btn" id="btnEnlargeQR">
+       <i class="fas fa-search-plus">
+       </i>
+       Perbesar QR
+      </button>
+     </div>
+    </div>
+   </section>
+   <!-- Quotes Section -->
+   <section aria-label="Kutipan motivasi" class="quotes mt-16 max-w-3xl mx-auto">
+    <p>
+     “Coding itu ibarat ngopi, makin sering makin nendang!”
+    </p>
+    <p>
+     “Error itu guru terbaik, jangan takut salah.”
+    </p>
+    <p>
+     “Santuy tapi serius, itu kunci developer keren.”
+    </p>
+   </section>
+   <!-- Footer Note -->
+   <section aria-label="Instruksi pengiriman bukti transfer" class="footer-note">
+    Silakan kirim bukti transfer ke guudz-start untuk keamanan bersama.
+   </section>
+   <!-- Services Section -->
+   <section aria-label="Layanan jasa guudz-start" class="services">
+    <div aria-label="Layanan jasa coding" aria-pressed="false" class="service-card" role="button" tabindex="0">
+     <i class="fas fa-code">
+     </i>
+     Jasa Coding
+    </div>
+    <div aria-label="Layanan jasa fix error" aria-pressed="false" class="service-card" role="button" tabindex="0">
+     <i class="fas fa-bug">
+     </i>
+     Jasa Fix Error
+    </div>
+    <div aria-label="Layanan jasa install panel pterodactyl" aria-pressed="false" class="service-card" role="button" tabindex="0">
+     <i class="fas fa-server">
+     </i>
+     Jasa Install Panel Pterodactyl
+    </div>
+    <div aria-label="Layanan jasa membuat bot WhatsApp atau Telegram" aria-pressed="false" class="service-card" role="button" tabindex="0">
+     <i class="fas fa-robot">
+     </i>
+     Jasa Buat Bot WhatsApp/Telegram
+    </div>
+   </section>
+   <!-- About Developer -->
+   <section aria-label="Tentang guudz-start" class="max-w-3xl mx-auto text-center text-blue-300 mb-12 px-4 sm:px-0">
+    <p>
+     guudz, seorang santri ASSALAM yang mencintai coding. Lu gua terus, cuy! Selalu berusaha bikin website yang kece dan fungsional buat kamu semua.
+    </p>
+   </section>
+   <!-- Music Player -->
+   <section aria-label="Pemutar musik" class="music-player">
+    <h2>
+     Pilih musik favoritmu, cuy!
+    </h2>
+    <div aria-label="Putar musik Sectumsempra - Feast" aria-pressed="false" class="track" data-src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3a7a7a7a7a.mp3?filename=sectumsempra-feast-12345.mp3" role="button" tabindex="0">
+     <span>
+      Sectumsempra - Feast
+     </span>
+     <i class="fas fa-play">
+     </i>
+    </div>
+    <div aria-label="Putar musik Peradaban - Feast" aria-pressed="false" class="track" data-src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b4b4b4b4b.mp3?filename=peradaban-feast-12345.mp3" role="button" tabindex="0">
+     <span>
+      Peradaban - Feast
+     </span>
+     <i class="fas fa-play">
+     </i>
+    </div>
+    <div aria-label="Putar musik Maju" aria-pressed="false" class="track" data-src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5c5c5c5c5c.mp3?filename=maju-12345.mp3" role="button" tabindex="0">
+     <span>
+      Maju
+     </span>
+     <i class="fas fa-play">
+     </i>
+    </div>
+    <div aria-label="Putar musik Luar Jaringan" aria-pressed="false" class="track" data-src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6d6d6d6d6d.mp3?filename=luar-jaringan-12345.mp3" role="button" tabindex="0">
+     <span>
+      Luar Jaringan
+     </span>
+     <i class="fas fa-play">
+     </i>
+    </div>
+    <audio id="audioPlayer" preload="none">
+    </audio>
+   </section>
+  </main>
+  <!-- Avatar Modal -->
+  <div aria-labelledby="avatarModalLabel" aria-modal="true" id="avatarModal" role="dialog" tabindex="-1">
+   <button aria-label="Tutup perbesar avatar" class="close-btn">
+    ×
+   </button>
+   <img alt="Foto besar avatar Alpin Developer, seorang santri Darussalam yang mencintai coding, mengenakan baju hijau dan latar belakang biru gelap" draggable="false" loading="lazy" src="https://files.catbox.moe/9c0yrz.jpg"/>
+  </div>
+  <!-- QRIS Modal -->
+  <div aria-labelledby="qrisModalLabel" aria-modal="true" id="qrisModal" role="dialog" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.9);z-index:70;justify-content:center;align-items:center;padding:1rem;" tabindex="-1">
+   <button aria-label="Tutup perbesar QRIS" class="close-btn" id="closeQrisModal" style="position:absolute;top:1.5rem;right:1.5rem;background:#3b82f6;color:#0f172a;font-weight:700;border-radius:9999px;padding:0.5rem 1rem;cursor:pointer;box-shadow:0 0 15px #60a5faaa;user-select:none;transition:background-color 0.3s ease;font-size:1.25rem;line-height:1;">
+    ×
+   </button>
+   <img alt="Foto besar kode QRIS Dana berwarna biru dengan latar belakang putih, siap discan untuk pembayaran" draggable="false" id="qrisModalImage" loading="lazy" src="https://files.catbox.moe/nlks1z.jpg" style="max-width:90vw;max-height:90vh;border-radius:1rem;box-shadow:0 0 30px #3b82f6aa;user-select:none;"/>
+  </div>
+  <script>
+   // Loading overlay hide after page load
+    window.addEventListener("load", () => {
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      loadingOverlay.style.opacity = "0";
+      setTimeout(() => {
+        loadingOverlay.style.display = "none";
+      }, 600);
+    });
+
+    // Flip card logic
+    const flipCards = document.querySelectorAll(".flip-card");
+    flipCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        card.classList.toggle("flipped");
+        const pressed = card.getAttribute("aria-pressed") === "true";
+        card.setAttribute("aria-pressed", !pressed);
+        // Toggle aria-hidden on front/back
+        const front = card.querySelector(".flip-card-front");
+        const back = card.querySelector(".flip-card-back");
+        if (card.classList.contains("flipped")) {
+          front.setAttribute("aria-hidden", "true");
+          back.setAttribute("aria-hidden", "false");
+        } else {
+          front.setAttribute("aria-hidden", "false");
+          back.setAttribute("aria-hidden", "true");
+        }
+      });
+      // Keyboard accessibility
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+
+    // Copy button logic
+    const copyButtons = document.querySelectorAll(".copy-btn");
+    copyButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const back = btn.closest(".flip-card-back");
+        const number = back.querySelector("div").textContent.trim();
+        navigator.clipboard.writeText(number).then(() => {
+          btn.textContent = "Tersalin!";
+          setTimeout(() => {
+            btn.textContent = "Salin";
+          }, 1500);
+        });
+      });
+    });
+
+    // Developer name click to open WhatsApp chat
+    const developerName = document.getElementById("developerName");
+    developerName.addEventListener("click", () => {
+      window.open("https://wa.me/0882003862744", "_blank", "noopener");
+    });
+    developerName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        developerName.click();
+      }
+    });
+
+    // Avatar enlarge modal
+    const btnEnlargeAvatar = document.getElementById("btnEnlargeAvatar");
+    const avatarModal = document.getElementById("avatarModal");
+    const avatarModalClose = avatarModal.querySelector(".close-btn");
+
+    btnEnlargeAvatar.addEventListener("click", () => {
+      avatarModal.style.display = "flex";
+      avatarModal.focus();
+      document.body.style.overflow = "hidden";
+    });
+    avatarModalClose.addEventListener("click", () => {
+      avatarModal.style.display = "none";
+      document.body.style.overflow = "";
+      btnEnlargeAvatar.focus();
+    });
+    avatarModal.addEventListener("click", (e) => {
+      if (e.target === avatarModal) {
+        avatarModalClose.click();
+      }
+    });
+    avatarModal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        avatarModalClose.click();
+      }
+    });
+
+    // QRIS enlarge and download
+    const btnEnlargeQR = document.getElementById("btnEnlargeQR");
+    const btnDownloadQR = document.getElementById("btnDownloadQR");
+    const qrisModal = document.getElementById("qrisModal");
+    const closeQrisModal = document.getElementById("closeQrisModal");
+    const qrisImage = document.getElementById("qrisImage");
+    const qrisModalImage = document.getElementById("qrisModalImage");
+
+    btnEnlargeQR.addEventListener("click", () => {
+      qrisModal.style.display = "flex";
+      qrisModal.focus();
+      document.body.style.overflow = "hidden";
+    });
+    closeQrisModal.addEventListener("click", () => {
+      qrisModal.style.display = "none";
+      document.body.style.overflow = "";
+      btnEnlargeQR.focus();
+    });
+    qrisModal.addEventListener("click", (e) => {
+      if (e.target === qrisModal) {
+        closeQrisModal.click();
+      }
+    });
+    qrisModal.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeQrisModal.click();
+      }
+    });
+
+    btnDownloadQR.addEventListener("click", () => {
+      // Download QR image
+      const link = document.createElement("a");
+      link.href = qrisImage.src;
+      link.download = "QRIS_Dana.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // Services click color toggle
+    const serviceCards = document.querySelectorAll(".service-card");
+    serviceCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        if (card.classList.contains("active")) {
+          card.classList.remove("active");
+          card.style.backgroundColor = "";
+          card.style.color = "#93c5fd";
+          card.style.borderColor = "transparent";
+          card.querySelector("i").style.color = "";
+        } else {
+          // Remove active from others
+          serviceCards.forEach((c) => {
+            c.classList.remove("active");
+            c.style.backgroundColor = "";
+            c.style.color = "#93c5fd";
+            c.style.borderColor = "transparent";
+            c.querySelector("i").style.color = "";
+          });
+          card.classList.add("active");
+          card.style.backgroundColor = "#2563eb";
+          card.style.color = "#0f172a";
+          card.style.borderColor = "#60a5fa";
+          card.querySelector("i").style.color = "#0f172a";
+        }
+      });
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+
+    // Clock update
+    function updateClock() {
+      const clock = document.getElementById("clock");
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2, "0");
+      const m = now.getMinutes().toString().padStart(2, "0");
+      const s = now.getSeconds().toString().padStart(2, "0");
+      clock.textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Music player logic
+    const audioPlayer = document.getElementById("audioPlayer");
+    const tracks = document.querySelectorAll(".track");
+    let currentTrack = null;
+
+    function playTrack(track) {
+      if (currentTrack === track) {
+        if (!audioPlayer.paused) {
+          audioPlayer.pause();
+          track.querySelector("i").classList.remove("fa-pause");
+          track.querySelector("i").classList.add("fa-play");
+          track.setAttribute("aria-pressed", "false");
+        } else {
+          audioPlayer.play();
+          track.querySelector("i").classList.remove("fa-play");
+          track.querySelector("i").classList.add("fa-pause");
+          track.setAttribute("aria-pressed", "true");
+        }
+      } else {
+        if (currentTrack) {
+          currentTrack.querySelector("i").classList.remove("fa-pause");
+          currentTrack.querySelector("i").classList.add("fa-play");
+          currentTrack.setAttribute("aria-pressed", "false");
+        }
+        currentTrack = track;
+        audioPlayer.src = track.dataset.src;
+        audioPlayer.play();
+        track.querySelector("i").classList.remove("fa-play");
+        track.querySelector("i").classList.add("fa-pause");
+        track.setAttribute("aria-pressed", "true");
+      }
+    }
+
+    tracks.forEach((track) => {
+      track.addEventListener("click", () => {
+        playTrack(track);
+      });
+      track.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          playTrack(track);
+        }
+      });
+    });
+
+    audioPlayer.addEventListener("ended", () => {
+      if (currentTrack) {
+        currentTrack.querySelector("i").classList.remove("fa-pause");
+        currentTrack.querySelector("i").classList.add("fa-play");
+        currentTrack.setAttribute("aria-pressed", "false");
+        currentTrack = null;
+      }
+    });
+  </script>
+ </body>
+</html>
